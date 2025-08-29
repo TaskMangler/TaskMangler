@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/taskmangler/taskmangler/src/backend/db"
+	"github.com/taskmangler/taskmangler/src/backend/hash"
 	"github.com/taskmangler/taskmangler/src/frontend"
 )
 
@@ -18,6 +19,39 @@ func addDb(database *db.Queries) echo.MiddlewareFunc {
 			return next(c)
 		}
 	}
+}
+
+func bootstrapAdminUser(database *db.Queries) error {
+	username := os.Getenv("TM_BOOTSTRAP_ADMIN_USER")
+	password := os.Getenv("TM_BOOTSTRAP_ADMIN_PASSWORD")
+
+	if username == "" || password == "" {
+		logrus.Info("No bootstrap admin user configured, skipping")
+		return nil
+	}
+
+	_, err := database.GetUser(context.Background(), username)
+	if err != nil && err != pgx.ErrNoRows {
+		return err
+	}
+	if err == nil {
+		logrus.Infof("Admin user %s already exists, skipping bootstrap", username)
+		return nil
+	}
+
+	passwordHash, err := hash.Hash(password)
+	if err != nil {
+		return err
+	}
+
+	logrus.Infof("Creating bootstrap admin user %s", username)
+	_, err = database.CreateUser(context.Background(), db.CreateUserParams{
+		Username:     username,
+		PasswordHash: passwordHash,
+		Admin:        true,
+	})
+
+	return err
 }
 
 func Start() error {
@@ -44,6 +78,14 @@ func Start() error {
 	e.HidePort = true
 
 	database := db.New(conn)
+
+	if os.Getenv("TM_BOOTSTRAP") == "true" {
+		logrus.Info("Bootstrapping admin user")
+		err := bootstrapAdminUser(database)
+		if err != nil {
+			logrus.WithError(err).Fatal("Failed to bootstrap admin user")
+		}
+	}
 
 	e.Use(frontend.Serve)
 	e.Use(addDb(database))
