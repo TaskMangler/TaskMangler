@@ -4,6 +4,12 @@ CREATE TABLE users (
     admin           BOOLEAN NOT NULL DEFAULT FALSE
 );
 
+CREATE TABLE sessions (
+    id          BIGINT PRIMARY KEY,
+    username    TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+    identifier  TEXT NOT NULL
+);
+
 CREATE TABLE boards (
     id      SERIAL PRIMARY KEY,
     name    TEXT NOT NULL,

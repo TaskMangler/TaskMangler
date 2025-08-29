@@ -17,6 +17,12 @@ type Column struct {
 	Position int32
 }
 
+type Session struct {
+	ID         int64
+	Username   string
+	Identifier string
+}
+
 type Task struct {
 	ID       int32
 	Title    string
