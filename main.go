@@ -5,6 +5,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+	"github.com/taskmangler/taskmangler/src/backend"
 )
 
 func init() {
@@ -30,4 +31,8 @@ func init() {
 	}
 }
 
-func main() {}
+func main() {
+	if err := backend.Start(); err != nil {
+		logrus.Fatal("Failed to start backend:", err)
+	}
+}
