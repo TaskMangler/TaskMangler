@@ -10,20 +10,21 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (username, password_hash)
-VALUES ($1, $2)
-RETURNING username, password_hash
+INSERT INTO users (username, password_hash, admin)
+VALUES ($1, $2, $3)
+RETURNING username, password_hash, admin
 `
 
 type CreateUserParams struct {
 	Username     string
 	PasswordHash string
+	Admin        bool
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.PasswordHash)
+	row := q.db.QueryRow(ctx, createUser, arg.Username, arg.PasswordHash, arg.Admin)
 	var i User
-	err := row.Scan(&i.Username, &i.PasswordHash)
+	err := row.Scan(&i.Username, &i.PasswordHash, &i.Admin)
 	return i, err
 }
 
@@ -38,7 +39,7 @@ func (q *Queries) DeleteUser(ctx context.Context, username string) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT username, password_hash
+SELECT username, password_hash, admin
 FROM users
 WHERE username = $1
 `
@@ -46,7 +47,71 @@ WHERE username = $1
 func (q *Queries) GetUser(ctx context.Context, username string) (User, error) {
 	row := q.db.QueryRow(ctx, getUser, username)
 	var i User
-	err := row.Scan(&i.Username, &i.PasswordHash)
+	err := row.Scan(&i.Username, &i.PasswordHash, &i.Admin)
+	return i, err
+}
+
+const listUsers = `-- name: ListUsers :many
+SELECT username, password_hash, admin
+FROM users
+ORDER BY username
+`
+
+func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.Query(ctx, listUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(&i.Username, &i.PasswordHash, &i.Admin); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const makeUserAdmin = `-- name: MakeUserAdmin :one
+UPDATE users
+SET admin = TRUE
+WHERE username = $1
+RETURNING username, admin
+`
+
+type MakeUserAdminRow struct {
+	Username string
+	Admin    bool
+}
+
+func (q *Queries) MakeUserAdmin(ctx context.Context, username string) (MakeUserAdminRow, error) {
+	row := q.db.QueryRow(ctx, makeUserAdmin, username)
+	var i MakeUserAdminRow
+	err := row.Scan(&i.Username, &i.Admin)
+	return i, err
+}
+
+const revokeUserAdmin = `-- name: RevokeUserAdmin :one
+UPDATE users
+SET admin = FALSE
+WHERE username = $1
+RETURNING username, admin
+`
+
+type RevokeUserAdminRow struct {
+	Username string
+	Admin    bool
+}
+
+func (q *Queries) RevokeUserAdmin(ctx context.Context, username string) (RevokeUserAdminRow, error) {
+	row := q.db.QueryRow(ctx, revokeUserAdmin, username)
+	var i RevokeUserAdminRow
+	err := row.Scan(&i.Username, &i.Admin)
 	return i, err
 }
 
@@ -54,7 +119,7 @@ const updateUserPassword = `-- name: UpdateUserPassword :one
 UPDATE users
 SET password_hash = $2
 WHERE username = $1
-RETURNING username, password_hash
+RETURNING username, password_hash, admin
 `
 
 type UpdateUserPasswordParams struct {
@@ -65,6 +130,6 @@ type UpdateUserPasswordParams struct {
 func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) (User, error) {
 	row := q.db.QueryRow(ctx, updateUserPassword, arg.Username, arg.PasswordHash)
 	var i User
-	err := row.Scan(&i.Username, &i.PasswordHash)
+	err := row.Scan(&i.Username, &i.PasswordHash, &i.Admin)
 	return i, err
 }

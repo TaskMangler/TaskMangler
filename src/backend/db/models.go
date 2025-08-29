@@ -32,4 +32,5 @@ type TaskDependency struct {
 type User struct {
 	Username     string
 	PasswordHash string
+	Admin        bool
 }

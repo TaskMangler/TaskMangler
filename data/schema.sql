@@ -1,6 +1,7 @@
 CREATE TABLE users (
     username        TEXT PRIMARY KEY,
-    password_hash   TEXT NOT NULL
+    password_hash   TEXT NOT NULL,
+    admin           BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE boards (
