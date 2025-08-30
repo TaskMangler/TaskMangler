@@ -2,8 +2,10 @@ package hash
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -14,6 +16,15 @@ const (
 	parallelism = 4
 )
 
+func hash(password string, salt []byte) string {
+	hash := argon2.IDKey([]byte(password), salt, iterations, memory, parallelism, 32)
+
+	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
+	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
+
+	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, memory, iterations, parallelism, b64Salt, b64Hash)
+}
+
 func Hash(password string) (string, error) {
 	salt := make([]byte, 16)
 	_, err := rand.Read(salt)
@@ -21,10 +32,23 @@ func Hash(password string) (string, error) {
 		return "", err
 	}
 
-	hash := argon2.IDKey([]byte(password), salt, iterations, memory, parallelism, 32)
+	return hash(password, salt), nil
+}
 
-	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
-	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
+func ComparePasswordAndHash(password, passHash string) (bool, error) {
+	parts := strings.Split(passHash, "$")
+	if len(parts) != 6 {
+		return false, fmt.Errorf("invalid hash format")
+	}
 
-	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, memory, iterations, parallelism, b64Salt, b64Hash), nil
+	b64salt := parts[4]
+
+	salt, err := base64.RawStdEncoding.DecodeString(b64salt)
+	if err != nil {
+		return false, err
+	}
+
+	phash := hash(password, salt)
+
+	return subtle.ConstantTimeCompare([]byte(phash), []byte(passHash)) == 1, nil
 }

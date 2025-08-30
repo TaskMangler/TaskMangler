@@ -61,6 +61,32 @@ func (q *Queries) GetSessionByID(ctx context.Context, id int64) (Session, error)
 	return i, err
 }
 
+const getSessions = `-- name: GetSessions :many
+SELECT id, username, identifier
+FROM sessions
+ORDER BY id
+`
+
+func (q *Queries) GetSessions(ctx context.Context) ([]Session, error) {
+	rows, err := q.db.Query(ctx, getSessions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Session
+	for rows.Next() {
+		var i Session
+		if err := rows.Scan(&i.ID, &i.Username, &i.Identifier); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSessionsByUsername = `-- name: GetSessionsByUsername :many
 SELECT id, username, identifier
 FROM sessions

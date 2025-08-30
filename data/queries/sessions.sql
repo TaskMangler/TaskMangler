@@ -14,6 +14,11 @@ FROM sessions
 WHERE username = $1
 ORDER BY id;
 
+-- name: GetSessions :many
+SELECT id, username, identifier
+FROM sessions
+ORDER BY id;
+
 -- name: DeleteSessionByID :exec
 DELETE FROM sessions
 WHERE id = $1;

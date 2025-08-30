@@ -7,8 +7,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	"github.com/taskmangler/taskmangler/src/backend/auth"
 	"github.com/taskmangler/taskmangler/src/backend/db"
 	"github.com/taskmangler/taskmangler/src/backend/hash"
+	"github.com/taskmangler/taskmangler/src/backend/routes/users"
 	"github.com/taskmangler/taskmangler/src/frontend"
 )
 
@@ -16,6 +18,15 @@ func addDb(database *db.Queries) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			c.Set("db", database)
+			return next(c)
+		}
+	}
+}
+
+func addAuth(am *auth.AuthManager) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("auth", am)
 			return next(c)
 		}
 	}
@@ -87,8 +98,17 @@ func Start() error {
 		}
 	}
 
+	am, err := auth.New(database)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to initialize auth manager")
+	}
+
 	e.Use(frontend.Serve)
 	e.Use(addDb(database))
+	e.Use(addAuth(am))
+
+	e.POST("/api/users/login", users.Login)
+	e.POST("/api/users/@me/sessions", users.GetAccessToken, auth.RequireRefreshToken)
 
 	logrus.Infof("Starting server on %s", bind)
 
