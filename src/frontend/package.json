@@ -7,7 +7,9 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "lint": "prettier --check .",
+    "format": "prettier --write ."
   },
   "license": "MIT",
   "devDependencies": {
@@ -19,6 +21,7 @@
   },
   "dependencies": {
     "@solidjs/router": "^0.15.3",
+    "prettier": "^3.6.2",
     "solid-js": "^1.9.5"
   }
 }
