@@ -41,7 +41,7 @@ func parseRefreshToken(token string) (*Session, error) {
 			return nil, errors.New("invalid token type")
 		}
 
-		sid := int64(claims["sid"].(float64))
+		sid := claims["sid"].(int64)
 		usr := claims["usr"].(string)
 		admin := claims["adm"].(bool)
 		return &Session{
@@ -87,7 +87,7 @@ func parseAccessToken(token string) (*Session, error) {
 			return nil, errors.New("invalid token type")
 		}
 
-		sid := int64(claims["sid"].(float64))
+		sid := claims["sid"].(int64)
 		usr := claims["usr"].(string)
 		admin := claims["adm"].(bool)
 		return &Session{

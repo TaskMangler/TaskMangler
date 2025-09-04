@@ -53,7 +53,7 @@ func (am *AuthManager) Login(username, password, identifier string) (string, err
 		return "", errors.New("invalid username or password")
 	}
 
-	sessionId := time.Now().UnixMilli()<<48 | int64(inc)
+	sessionId := time.Now().UnixMilli()<<16 | int64(inc)
 	inc++
 
 	token, err := createRefreshToken(&Session{
@@ -66,7 +66,7 @@ func (am *AuthManager) Login(username, password, identifier string) (string, err
 	}
 
 	_, err = am.database.CreateSession(context.Background(), db.CreateSessionParams{
-		ID:         sessionId,
+		ID:         int64(sessionId),
 		Username:   username,
 		Identifier: identifier,
 	})
