@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/labstack/echo/middleware"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 	"github.com/taskmangler/taskmangler/src/backend/auth"
 	"github.com/taskmangler/taskmangler/src/backend/db"
