@@ -17,7 +17,13 @@ const UsersPage: Component = () => {
   return (
     <>
       <div class="flex justify-center">
-        <form class="flex-col justify-center m-4" id="createUserForm" onsubmit={(e) => {e.preventDefault()}}>
+        <form
+          class="flex-col justify-center m-4"
+          id="createUserForm"
+          onsubmit={(e) => {
+            e.preventDefault();
+          }}
+        >
           <div class="w-full">
             <label for="username" class="w-[25%]">
               Username
