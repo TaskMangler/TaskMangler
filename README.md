@@ -15,3 +15,11 @@ The address and port the server will bind to. Default is `:8080`.
 ### `TM_DATABASE_URI`
 
 The database connection URI. Example for PostgreSQL: `postgresql://user:password@localhost:5432/dbname?sslmode=disable`.
+
+## Migrating the Database
+
+Run the following command, using your own database URI:
+
+```bash
+atlas migrate apply --dir "file://data/migrations" --url "postgresql://postgres:postgres@localhost:5432/taskmangler?sslmode=disable"
+```
