@@ -40,6 +40,7 @@ export async function getAccessToken() {
   }
 
   const data = await response.json();
+  localStorage.setItem("accessToken", data.token);
   return data.token;
 }
 
@@ -48,31 +49,45 @@ export type User = {
   admin: boolean;
 };
 
-export async function listUsers(): Promise<User[]> {
-  const resp = await fetch(API_BASE + "/api/users", {
-    headers: {
-      Authorization: `Bearer ${await getAccessToken()}`,
-    },
-  });
-  if (!resp.ok) {
-    throw new Error(`Failed to list users: ${resp.statusText}`);
+async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  let token = localStorage.getItem("accessToken");
+  if (!token) {
+    token = await getAccessToken();
   }
 
-  return resp.json();
+  const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : {};
+  const expiry = tokenData.exp ? tokenData.exp * 1000 : 0;
+  const now = Date.now();
+
+  if (now >= expiry) {
+    token = await getAccessToken();
+  }
+
+  const resp = await fetch(API_BASE + path, {
+    ...options,
+    headers: {
+      ...(options?.headers || {}),
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!resp.ok) {
+    throw new Error(`API request failed: ${resp.statusText}`);
+  }
+
+  return await resp.json();
+}
+
+export async function listUsers(): Promise<User[]> {
+  return await request<User[]>("/api/users");
 }
 
 export async function createUser(username: string, password: string) {
-  const resp = await fetch(API_BASE + "/api/users", {
+  return await request<User>("/api/users", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${await getAccessToken()}`,
     },
     body: JSON.stringify({ username, password }),
   });
-  if (!resp.ok) {
-    throw new Error(`Failed to create user: ${resp.statusText}`);
-  }
-
-  return resp.json();
 }
