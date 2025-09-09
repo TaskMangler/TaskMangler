@@ -1,4 +1,4 @@
-import { Component, createSignal, For } from "solid-js";
+import { Component, createSignal, For, Show } from "solid-js";
 import { API, User } from "../../api";
 
 const AdminPage: Component = () => {
@@ -13,6 +13,12 @@ const AdminPage: Component = () => {
 
   async function createUser() {
     await API.createUser(username(), password());
+
+    setUsers(await API.listUsers());
+  }
+
+  async function deleteUser(username: string) {
+    await API.deleteUser(username);
 
     setUsers(await API.listUsers());
   }
@@ -43,7 +49,10 @@ const AdminPage: Component = () => {
             class="bg-zinc-700 p-2 rounded-sm outline-hidden"
             onInput={(e) => setPassword(e.currentTarget.value)}
           />
-          <button type="submit" class="bg-blue-500 p-2 rounded-sm w-full md:w-30 cursor-pointer hover:bg-blue-400">
+          <button
+            type="submit"
+            class="bg-blue-500 p-2 rounded-sm w-full md:w-30 cursor-pointer hover:bg-blue-400 active:bg-blue-600"
+          >
             Create
           </button>
         </form>
@@ -53,7 +62,13 @@ const AdminPage: Component = () => {
             {(user) => (
               <div class="bg-zinc-700 p-2 rounded-sm flex flex-row justify-between items-center">
                 <h2>{user.username}</h2>
-                <button class="bg-zinc-600 text-zinc-400 p-2 rounded-sm cursor-not-allowed">Delete</button>
+                <button
+                  class="bg-red-400 p-2 rounded-sm cursor-pointer hover:bg-red-300 active:bg-red-500 disabled:cursor-not-allowed disabled:bg-zinc-500 disabled:text-zinc-200"
+                  onclick={() => deleteUser(user.username)}
+                  disabled={user.username === API.getActiveUser()}
+                >
+                  Delete
+                </button>
               </div>
             )}
           </For>

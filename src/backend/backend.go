@@ -123,6 +123,7 @@ func Start() error {
 	e.GET("/api/users/@me", users.GetSelfUser, auth.RequireAccessToken)
 	e.POST("/api/users", users.CreateUser, auth.RequireAccessToken, auth.RequireAdmin)
 	e.GET("/api/users", users.ListUsers, auth.RequireAccessToken, auth.RequireAdmin)
+	e.DELETE("/api/users/:username", users.DeleteUser, auth.RequireAccessToken, auth.RequireAdmin)
 
 	logrus.Infof("Starting server on %s", bind)
 

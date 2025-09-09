@@ -19,6 +19,9 @@ class APIClient {
   isAdmin: () => boolean;
   #setIsAdmin: (value: boolean) => void;
 
+  getActiveUser: () => string | null;
+  #setActiveUser: (user: string | null) => void;
+
   constructor() {
     const [isLoggedIn, setIsLoggedIn] = createSignal<boolean>(false);
 
@@ -29,6 +32,11 @@ class APIClient {
 
     this.isAdmin = isAdmin;
     this.#setIsAdmin = setIsAdmin;
+
+    const [activeUser, setActiveUser] = createSignal<string | null>(null);
+
+    this.getActiveUser = activeUser;
+    this.#setActiveUser = setActiveUser;
 
     if (localStorage.getItem("accessToken")) {
       this.#setIsLoggedIn(true);
@@ -44,6 +52,7 @@ class APIClient {
       const token = localStorage.getItem("refreshToken");
       const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : {};
       this.#setIsAdmin(!!tokenData.adm);
+      this.#setActiveUser(tokenData.usr || null);
     }
   }
 
@@ -120,7 +129,12 @@ class APIClient {
       throw new Error(`API request failed: ${resp.statusText}`);
     }
 
-    return await resp.json();
+    const text = await resp.text();
+    if (!text) {
+      return {} as T;
+    }
+
+    return JSON.parse(text) as T;
   }
 
   async login(username: string, password: string) {
@@ -134,6 +148,7 @@ class APIClient {
     const token = localStorage.getItem("refreshToken");
     const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : {};
     this.#setIsAdmin(!!tokenData.adm);
+    this.#setActiveUser(tokenData.usr);
   }
 
   logout() {
@@ -142,6 +157,7 @@ class APIClient {
 
     this.#setIsLoggedIn(false);
     this.#setIsAdmin(false);
+    this.#setActiveUser(null);
   }
 
   async createUser(username: string, password: string): Promise<User> {
