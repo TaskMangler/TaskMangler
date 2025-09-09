@@ -41,7 +41,8 @@ const UsersPage: Component = () => {
           </button>
         </form>
       </div>
-      <div class="flex justify-center">
+      <div class="flex flex-col w-full items-center">
+        <h2>Users:</h2>
         <For each={users()}>
           {(user) => (
             <div class="rounded bg-zinc-700 my-4 w-48 p-2">
