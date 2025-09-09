@@ -3,6 +3,7 @@ import { Component } from "solid-js";
 
 const LogoutPage: Component = () => {
   localStorage.removeItem("refreshToken");
+  localStorage.removeItem("accessToken");
 
   const nav = useNavigate();
 
