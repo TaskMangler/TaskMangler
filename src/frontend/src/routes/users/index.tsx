@@ -24,7 +24,7 @@ const UsersPage: Component = () => {
         <div class="flex flex-col gap-4 mt-8 bg-zinc-800 p-2 rounded-md md:flex-row">
           <input id="usernameInput" type="text" placeholder="Username..." class="bg-zinc-700 p-2 rounded-sm outline-hidden" />
           <input id="passwordInput" type="password" placeholder="Password..." class="bg-zinc-700 p-2 rounded-sm outline-hidden" />
-          <button class="bg-blue-500 p-2 rounded-sm w-full md:w-30 cursor-pointer" onclick={createUser}>Create</button>
+          <button class="bg-blue-500 p-2 rounded-sm w-full md:w-30 cursor-pointer hover:bg-blue-400" onclick={createUser}>Create</button>
         </div>
 
         <div class="flex flex-col gap-4 mt-8 bg-zinc-800 p-2 rounded-md">
