@@ -6,6 +6,7 @@ import { Route, Router } from "@solidjs/router";
 import App from "./App";
 import LoginPage from "./routes/login";
 import LogoutPage from "./routes/logout";
+import UsersPage from "./routes/users";
 
 const root = document.getElementById("root");
 
@@ -21,6 +22,7 @@ render(
       <Route path="/" component={App} />
       <Route path="/login" component={LoginPage} />
       <Route path="/logout" component={LogoutPage} />
+      <Route path="/users" component={UsersPage} />
     </Router>
   ),
   root!,

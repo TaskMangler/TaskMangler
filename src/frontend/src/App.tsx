@@ -3,13 +3,18 @@ import { useNavigate } from "@solidjs/router";
 
 const App: Component = () => {
   console.log("App loaded");
-  if (!localStorage.getItem("refreshToken")) {
+
+  const refreshToken = localStorage.getItem("refreshToken");
+
+  if (!refreshToken) {
     const nav = useNavigate();
-    nav("/login");
+    nav("/login", {
+      replace: true,
+    });
   }
 
-  const token = localStorage.getItem("refreshToken");
-  const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : null;
+  const token = refreshToken;
+  const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : {};
   console.log("Token data:", tokenData);
 
   return (

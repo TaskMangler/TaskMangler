@@ -38,7 +38,10 @@ export async function getAccessToken() {
   return data.token;
 }
 
-export type User = {};
+export type User = {
+  username: string;
+  admin: boolean;
+};
 
 export async function listUsers(): Promise<User[]> {
   const resp = await fetch("/api/users", {
