@@ -2,11 +2,12 @@
 import "./index.css";
 import { render } from "solid-js/web";
 
-import { Route, Router } from "@solidjs/router";
+import { Navigate, Route, Router, useLocation, useNavigate } from "@solidjs/router";
 import App from "./App";
 import LoginPage from "./routes/login";
-import LogoutPage from "./routes/logout";
-import UsersPage from "./routes/users";
+import AdminPage from "./routes/admin";
+import { API } from "./api";
+import { createRenderEffect, createSignal, JSX, on, ParentProps, Show } from "solid-js";
 
 const root = document.getElementById("root");
 
@@ -16,14 +17,49 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
+function AuthGuard(props: ParentProps): JSX.Element {
+  const [isAuthenticated, setIsAuthenticated] = createSignal(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  async function performAuthCheck() {
+    if (API.isLoggedIn()) {
+      setIsAuthenticated(true);
+      console.log(`Authenticated: ${new Date()}`);
+    } else {
+      navigate("/login");
+    }
+  }
+
+  createRenderEffect(on(() => location.pathname, performAuthCheck));
+
+  return (
+    <>
+      <Show when={isAuthenticated()} fallback={<div>FALLLBACK</div>}>
+        {props.children}
+      </Show>
+    </>
+  );
+}
+
 render(
   () => (
-    <Router>
-      <Route path="/" component={App} />
-      <Route path="/login" component={LoginPage} />
-      <Route path="/logout" component={LogoutPage} />
-      <Route path="/users" component={UsersPage} />
-    </Router>
+    <>
+      <nav class="bg-zinc-800 text-white min-w-screen h-10 flex items-center px-4">
+        <h2>TaskMangler</h2>
+      </nav>
+      <div class="bg-zinc-900 text-white min-h-screen p-4">
+        <Router>
+          <Route path="/" component={AuthGuard}>
+            <App />
+          </Route>
+          <Route path="/login" component={LoginPage} />
+          <Route path="/admin" component={AuthGuard}>
+            <AdminPage />
+          </Route>
+        </Router>
+      </div>
+    </>
   ),
   root!,
 );

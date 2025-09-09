@@ -1,3 +1,5 @@
+import { createSignal } from "solid-js";
+
 const isDevMode = () => {
   const url = new URL(window.location.href);
   return url.port === "3000" && url.hostname === "localhost";
@@ -11,6 +13,26 @@ export type User = {
 };
 
 class APIClient {
+  isLoggedIn: () => boolean;
+  setIsLoggedIn: (value: boolean) => void;
+
+  constructor() {
+    const [isLoggedIn, setIsLoggedIn] = createSignal<boolean>(false);
+
+    this.isLoggedIn = isLoggedIn;
+    this.setIsLoggedIn = setIsLoggedIn;
+
+    if (localStorage.getItem("accessToken")) {
+      this.setIsLoggedIn(true);
+    } else if (localStorage.getItem("refreshToken")) {
+      this.#getAccessToken()
+        .then(() => this.setIsLoggedIn(true))
+        .catch(() => this.setIsLoggedIn(false));
+    } else {
+      this.setIsLoggedIn(false);
+    }
+  }
+
   async #getSessionToken(username: string, password: string): Promise<void> {
     const response = await fetch(API_BASE + "/api/users/login", {
       method: "POST",
@@ -33,6 +55,8 @@ class APIClient {
     if (!refreshToken) {
       throw new Error("No refresh token found");
     }
+
+    console.log(refreshToken);
 
     const response = await fetch(API_BASE + "/api/users/@me/sessions", {
       method: "POST",
@@ -86,8 +110,12 @@ class APIClient {
   }
 
   async login(username: string, password: string) {
+    this.logout();
+
     await this.#getSessionToken(username, password);
     await this.#getAccessToken();
+
+    this.setIsLoggedIn(true);
   }
 
   logout() {

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -16,7 +17,7 @@ type Session struct {
 
 func createRefreshToken(session *Session) (string, error) {
 	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sid": session.Id,
+		"sid": fmt.Sprintf("%d", session.Id),
 		"usr": session.Username,
 		"adm": session.Admin,
 		"typ": "refresh",
@@ -41,11 +42,16 @@ func parseRefreshToken(token string) (*Session, error) {
 			return nil, errors.New("invalid token type")
 		}
 
-		sid := int64(claims["sid"].(float64))
+		sid := claims["sid"].(string)
+		var sidInt int64
+		_, err := fmt.Sscanf(sid, "%d", &sidInt)
+		if err != nil {
+			return nil, errors.New("invalid session id in token")
+		}
 		usr := claims["usr"].(string)
 		admin := claims["adm"].(bool)
 		return &Session{
-			Id:       sid,
+			Id:       sidInt,
 			Username: usr,
 			Admin:    admin,
 		}, nil
@@ -56,7 +62,7 @@ func parseRefreshToken(token string) (*Session, error) {
 
 func createAccessToken(session *Session) (string, error) {
 	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sid": session.Id,
+		"sid": fmt.Sprintf("%d", session.Id),
 		"usr": session.Username,
 		"adm": session.Admin,
 		"exp": time.Now().Add(15 * time.Minute).Unix(),
@@ -87,11 +93,16 @@ func parseAccessToken(token string) (*Session, error) {
 			return nil, errors.New("invalid token type")
 		}
 
-		sid := int64(claims["sid"].(float64))
+		sid := claims["sid"].(string)
+		var sidInt int64
+		_, err := fmt.Sscanf(sid, "%d", &sidInt)
+		if err != nil {
+			return nil, errors.New("invalid session id in token")
+		}
 		usr := claims["usr"].(string)
 		admin := claims["adm"].(bool)
 		return &Session{
-			Id:       sid,
+			Id:       sidInt,
 			Username: usr,
 			Admin:    admin,
 		}, nil

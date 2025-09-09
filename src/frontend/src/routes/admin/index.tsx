@@ -1,7 +1,7 @@
 import { Component, createSignal, For } from "solid-js";
 import { API, User } from "../../api";
 
-const UsersPage: Component = () => {
+const AdminPage: Component = () => {
   const [users, setUsers] = createSignal<User[]>();
 
   const [username, setUsername] = createSignal("");
@@ -19,7 +19,7 @@ const UsersPage: Component = () => {
 
   return (
     <div class="items-center flex w-full flex-col">
-      <h1 class="text-4xl mt-4">Users</h1>
+      <h1 class="text-4xl mt-4">Admin</h1>
 
       <div class="grid">
         <form
@@ -63,4 +63,4 @@ const UsersPage: Component = () => {
   );
 };
 
-export default UsersPage;
+export default AdminPage;

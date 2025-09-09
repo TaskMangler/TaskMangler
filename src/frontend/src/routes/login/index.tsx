@@ -1,5 +1,6 @@
 import { Component } from "solid-js";
 import { API } from "../../api";
+import { useNavigate } from "@solidjs/router";
 
 async function handleLogin(event: Event) {
   event.preventDefault();
@@ -11,10 +12,11 @@ async function handleLogin(event: Event) {
   console.log("Logging in with", { username, password });
 
   await API.login(username, password);
-  window.location.href = "/";
 }
 
 const LoginPage: Component = () => {
+  const navigate = useNavigate();
+
   return (
     <>
       <div class="min-h-screen flex items-center justify-center px-4">
@@ -22,7 +24,14 @@ const LoginPage: Component = () => {
           <h2 class="text-2xl sm:text-3xl font-extrabold mb-6 sm:mb-8 text-center text-white tracking-tight">
             Login to Your Account
           </h2>
-          <form class="space-y-5 sm:space-y-6" onSubmit={(e) => handleLogin(e)}>
+          <form
+            class="space-y-5 sm:space-y-6"
+            onSubmit={(e) => {
+              handleLogin(e).then(() => {
+                navigate("/");
+              });
+            }}
+          >
             <div>
               <label for="username" class="block text-sm font-medium text-zinc-200 mb-1">
                 Username
