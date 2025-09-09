@@ -139,6 +139,9 @@ class APIClient {
   logout() {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+
+    this.#setIsLoggedIn(false);
+    this.#setIsAdmin(false);
   }
 
   async createUser(username: string, password: string): Promise<User> {
