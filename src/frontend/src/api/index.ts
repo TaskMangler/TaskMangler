@@ -14,22 +14,36 @@ export type User = {
 
 class APIClient {
   isLoggedIn: () => boolean;
-  setIsLoggedIn: (value: boolean) => void;
+  #setIsLoggedIn: (value: boolean) => void;
+
+  isAdmin: () => boolean;
+  #setIsAdmin: (value: boolean) => void;
 
   constructor() {
     const [isLoggedIn, setIsLoggedIn] = createSignal<boolean>(false);
 
     this.isLoggedIn = isLoggedIn;
-    this.setIsLoggedIn = setIsLoggedIn;
+    this.#setIsLoggedIn = setIsLoggedIn;
+
+    const [isAdmin, setIsAdmin] = createSignal<boolean>(false);
+
+    this.isAdmin = isAdmin;
+    this.#setIsAdmin = setIsAdmin;
 
     if (localStorage.getItem("accessToken")) {
-      this.setIsLoggedIn(true);
+      this.#setIsLoggedIn(true);
     } else if (localStorage.getItem("refreshToken")) {
       this.#getAccessToken()
-        .then(() => this.setIsLoggedIn(true))
-        .catch(() => this.setIsLoggedIn(false));
+        .then(() => this.#setIsLoggedIn(true))
+        .catch(() => this.#setIsLoggedIn(false));
     } else {
-      this.setIsLoggedIn(false);
+      this.#setIsLoggedIn(false);
+    }
+
+    if (this.isLoggedIn()) {
+      const token = localStorage.getItem("refreshToken");
+      const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : {};
+      this.#setIsAdmin(!!tokenData.adm);
     }
   }
 
@@ -115,7 +129,11 @@ class APIClient {
     await this.#getSessionToken(username, password);
     await this.#getAccessToken();
 
-    this.setIsLoggedIn(true);
+    this.#setIsLoggedIn(true);
+
+    const token = localStorage.getItem("refreshToken");
+    const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : {};
+    this.#setIsAdmin(!!tokenData.adm);
   }
 
   logout() {

@@ -17,16 +17,21 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-function AuthGuard(props: ParentProps): JSX.Element {
+function AuthGuard(props: ParentProps & { admin?: boolean }): JSX.Element {
   const [isAuthenticated, setIsAuthenticated] = createSignal(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   async function performAuthCheck() {
-    if (API.isLoggedIn()) {
+    if (API.isLoggedIn() && (!props.admin || API.isAdmin())) {
       setIsAuthenticated(true);
       console.log(`Authenticated: ${new Date()}`);
     } else {
+      if (API.isLoggedIn()) {
+        navigate("/");
+        return
+      }
+
       navigate("/login");
     }
   }
@@ -45,18 +50,25 @@ function AuthGuard(props: ParentProps): JSX.Element {
 render(
   () => (
     <>
-      <nav class="bg-zinc-800 text-white min-w-screen h-10 flex items-center px-4">
-        <h2>TaskMangler</h2>
-      </nav>
-      <div class="bg-zinc-900 text-white min-h-screen p-4">
+      <div class="bg-zinc-900 text-white min-h-screen">
         <Router>
-          <Route path="/" component={AuthGuard}>
-            <App />
-          </Route>
+          <Route
+            path="/"
+            component={() => (
+              <AuthGuard>
+                <App />
+              </AuthGuard>
+            )}
+          />
           <Route path="/login" component={LoginPage} />
-          <Route path="/admin" component={AuthGuard}>
-            <AdminPage />
-          </Route>
+          <Route
+            path="/admin"
+            component={() => (
+              <AuthGuard admin={true}>
+                <AdminPage />
+              </AuthGuard>
+            )}
+          />
         </Router>
       </div>
     </>
