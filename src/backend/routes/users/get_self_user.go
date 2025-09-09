@@ -8,7 +8,13 @@ import (
 func GetSelfUser(c echo.Context) error {
 	session := c.Get("session").(*auth.Session)
 
-	return c.JSON(200, map[string]string{
-		"username": session.Username,
+	type userResponse struct {
+		Username string `json:"username"`
+		Admin    bool   `json:"admin"`
+	}
+
+	return c.JSON(200, userResponse{
+		Username: session.Username,
+		Admin:    session.Admin,
 	})
 }

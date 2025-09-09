@@ -110,6 +110,8 @@ func Start() error {
 	e.POST("/api/users/login", users.Login)
 	e.POST("/api/users/@me/sessions", users.GetAccessToken, auth.RequireRefreshToken)
 	e.GET("/api/users/@me", users.GetSelfUser, auth.RequireAccessToken)
+	e.POST("/api/users", users.CreateUser, auth.RequireAccessToken, auth.RequireAdmin)
+	e.GET("/api/users", users.ListUsers, auth.RequireAccessToken, auth.RequireAdmin)
 
 	logrus.Infof("Starting server on %s", bind)
 

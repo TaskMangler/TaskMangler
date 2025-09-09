@@ -37,3 +37,34 @@ export async function getAccessToken() {
   const data = await response.json();
   return data.token;
 }
+
+export type User = {};
+
+export async function listUsers(): Promise<User[]> {
+  const resp = await fetch("/api/users", {
+    headers: {
+      Authorization: `Bearer ${await getAccessToken()}`,
+    },
+  });
+  if (!resp.ok) {
+    throw new Error(`Failed to list users: ${resp.statusText}`);
+  }
+
+  return resp.json();
+}
+
+export async function createUser(username: string, password: string) {
+  const resp = await fetch("/api/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await getAccessToken()}`,
+    },
+    body: JSON.stringify({ username, password }),
+  });
+  if (!resp.ok) {
+    throw new Error(`Failed to create user: ${resp.statusText}`);
+  }
+
+  return resp.json();
+}
