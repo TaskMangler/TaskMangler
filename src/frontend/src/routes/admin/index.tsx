@@ -1,5 +1,6 @@
 import { Component, createSignal, For, Show } from "solid-js";
 import { API, User } from "../../api";
+import Navbar from "../../components/nav";
 
 const AdminPage: Component = () => {
   const [users, setUsers] = createSignal<User[]>();
@@ -24,6 +25,8 @@ const AdminPage: Component = () => {
   }
 
   return (
+    <>
+    <Navbar></Navbar>
     <div class="items-center flex w-full flex-col">
       <h1 class="text-4xl mt-4">Admin</h1>
 
@@ -75,6 +78,7 @@ const AdminPage: Component = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

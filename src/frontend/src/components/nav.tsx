@@ -7,7 +7,7 @@ const Navbar: Component = () => {
 
   return (
     <nav class="bg-zinc-800 text-white min-w-screen h-10 flex items-center px-4 justify-between">
-      <h2>TaskMangler</h2>
+      <A href="/" class="hover:underline text-sky-200">TaskMangler</A>
       <div class="flex gap-4 items-center">
         <Show when={API.isAdmin()}>
           <A href="/admin" class="hover:underline text-sky-200">
