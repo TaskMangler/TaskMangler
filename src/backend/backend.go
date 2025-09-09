@@ -6,7 +6,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 	"github.com/taskmangler/taskmangler/src/backend/auth"
 	"github.com/taskmangler/taskmangler/src/backend/db"
@@ -30,6 +29,15 @@ func addAuth(am *auth.AuthManager) echo.MiddlewareFunc {
 			c.Set("auth", am)
 			return next(c)
 		}
+	}
+}
+
+func corsBypass(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+		c.Response().Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		return next(c)
 	}
 }
 
@@ -104,10 +112,7 @@ func Start() error {
 		logrus.WithError(err).Fatal("Failed to initialize auth manager")
 	}
 
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000", "http://localhost:8080"},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
-	}))
+	e.Use(corsBypass)
 
 	e.Use(frontend.Serve)
 	e.Use(addDb(database))

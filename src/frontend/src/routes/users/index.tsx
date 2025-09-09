@@ -1,57 +1,44 @@
 import { Component, createSignal, For } from "solid-js";
-import { createUser, listUsers, User } from "../../api";
+import { API, User } from "../../api";
 
 const UsersPage: Component = () => {
   const [users, setUsers] = createSignal<User[]>();
 
-  listUsers().then((usr) => {
-    setUsers(usr);
+  API.listUsers().then((users) => {
+    setUsers(users);
   });
 
-  async function submitUserForm() {
+  async function createUser() {
     const username: string = (document.getElementById("usernameInput") as HTMLInputElement).value;
     const password: string = (document.getElementById("passwordInput") as HTMLInputElement).value;
-    await createUser(username, password);
+    await API.createUser(username, password);
+
+    setUsers(await API.listUsers());
   }
 
   return (
-    <>
-      <div class="flex justify-center">
-        <form
-          class="flex-col justify-center m-4"
-          id="createUserForm"
-          onsubmit={(e) => {
-            e.preventDefault();
-          }}
-        >
-          <div class="w-full">
-            <label for="username" class="w-[25%]">
-              Username
-            </label>
-            <input id="usernameInput" name="username" type="text" class="border-solid border-2 m-1"></input>
-          </div>
-          <div class="w-full">
-            <label for="password" class="w-[25%]">
-              Password
-            </label>
-            <input id="passwordInput" name="password" type="password" class="border-solid border-2 m-1"></input>
-          </div>
-          <button class="bg-blue-600 w-full" onclick={() => submitUserForm()}>
-            Create User
-          </button>
-        </form>
+    <div class="items-center flex w-full flex-col">
+      <h1 class="text-4xl mt-4">Users</h1>
+
+      <div class="grid">
+        <div class="flex flex-col gap-4 mt-8 bg-zinc-800 p-2 rounded-md md:flex-row">
+          <input id="usernameInput" type="text" placeholder="Username..." class="bg-zinc-700 p-2 rounded-sm outline-hidden" />
+          <input id="passwordInput" type="password" placeholder="Password..." class="bg-zinc-700 p-2 rounded-sm outline-hidden" />
+          <button class="bg-blue-500 p-2 rounded-sm w-full md:w-30 cursor-pointer" onclick={createUser}>Create</button>
+        </div>
+
+        <div class="flex flex-col gap-4 mt-8 bg-zinc-800 p-2 rounded-md">
+          <For each={users()}>
+            {(user) => (
+              <div class="bg-zinc-700 p-2 rounded-sm flex flex-row justify-between items-center">
+                <h2>{user.username}</h2>
+                <button class="bg-zinc-600 text-zinc-400 p-2 rounded-sm cursor-not-allowed">Delete</button>
+              </div>
+            )}
+          </For>
+        </div>
       </div>
-      <div class="flex flex-col w-full items-center">
-        <h2>Users:</h2>
-        <For each={users()}>
-          {(user) => (
-            <div class="rounded bg-zinc-700 my-4 w-48 p-2">
-              <h2>{user.username}</h2>
-            </div>
-          )}
-        </For>
-      </div>
-    </>
+    </div>
   );
 };
 

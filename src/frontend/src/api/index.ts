@@ -44,6 +44,11 @@ export async function getAccessToken() {
   return data.token;
 }
 
+interface API {
+  createUser: (username: string, password: string) => Promise<User>;
+  listUsers: () => Promise<User[]>;
+}
+
 export type User = {
   username: string;
   admin: boolean;
@@ -78,11 +83,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return await resp.json();
 }
 
-export async function listUsers(): Promise<User[]> {
+async function listUsers(): Promise<User[]> {
   return await request<User[]>("/api/users");
 }
 
-export async function createUser(username: string, password: string) {
+async function createUser(username: string, password: string) {
   return await request<User>("/api/users", {
     method: "POST",
     headers: {
@@ -91,3 +96,8 @@ export async function createUser(username: string, password: string) {
     body: JSON.stringify({ username, password }),
   });
 }
+
+export const API: API = {
+  createUser,
+  listUsers,
+};
