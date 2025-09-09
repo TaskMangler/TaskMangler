@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/labstack/echo/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/taskmangler/taskmangler/src/backend/auth"
@@ -102,6 +103,11 @@ func Start() error {
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to initialize auth manager")
 	}
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000", "http://localhost:8080"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	e.Use(frontend.Serve)
 	e.Use(addDb(database))
