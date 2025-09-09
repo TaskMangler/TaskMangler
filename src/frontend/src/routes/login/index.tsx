@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { getRefreshToken } from "../../api";
+import { API } from "../../api";
 
 async function handleLogin(event: Event) {
   event.preventDefault();
@@ -10,7 +10,7 @@ async function handleLogin(event: Event) {
 
   console.log("Logging in with", { username, password });
 
-  await getRefreshToken(username, password);
+  await API.login(username, password);
   window.location.href = "/";
 }
 

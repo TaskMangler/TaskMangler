@@ -1,103 +1,129 @@
-const url = new URL(window.location.href);
-const port = url.port ? `:${url.port}` : "";
+const isDevMode = () => {
+  const url = new URL(window.location.href);
+  return url.port === "3000" && url.hostname === "localhost";
+};
 
-const API_BASE = port === ":3000" ? "http://localhost:8080" : "";
-
-export async function getRefreshToken(username: string, password: string) {
-  const response = await fetch(API_BASE + "/api/users/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, password }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Login failed: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  localStorage.setItem("refreshToken", data.token);
-  return data;
-}
-
-export async function getAccessToken() {
-  const refreshToken = localStorage.getItem("refreshToken");
-  if (!refreshToken) {
-    throw new Error("No refresh token found");
-  }
-
-  const response = await fetch(API_BASE + "/api/users/@me/sessions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${refreshToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to get access token: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  localStorage.setItem("accessToken", data.token);
-  return data.token;
-}
-
-interface API {
-  createUser: (username: string, password: string) => Promise<User>;
-  listUsers: () => Promise<User[]>;
-}
+const API_BASE = isDevMode() ? "http://localhost:8080" : "";
 
 export type User = {
   username: string;
   admin: boolean;
 };
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  let token = localStorage.getItem("accessToken");
-  if (!token) {
-    token = await getAccessToken();
+class APIClient {
+  async #getSessionToken(username: string, password: string): Promise<void> {
+    const response = await fetch(API_BASE + "/api/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Login failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    localStorage.setItem("refreshToken", data.token);
   }
 
-  const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : {};
-  const expiry = tokenData.exp ? tokenData.exp * 1000 : 0;
-  const now = Date.now();
+  async #getAccessToken(): Promise<void> {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (!refreshToken) {
+      throw new Error("No refresh token found");
+    }
 
-  if (now >= expiry) {
-    token = await getAccessToken();
+    const response = await fetch(API_BASE + "/api/users/@me/sessions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${refreshToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to get access token: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    localStorage.setItem("accessToken", data.token);
   }
 
-  const resp = await fetch(API_BASE + path, {
-    ...options,
-    headers: {
-      ...(options?.headers || {}),
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  async #ensureAccessToken(): Promise<string> {
+    let token = localStorage.getItem("accessToken");
+    if (!token) {
+      await this.#getAccessToken();
+      return;
+    }
 
-  if (!resp.ok) {
-    throw new Error(`API request failed: ${resp.statusText}`);
+    const tokenData = token ? JSON.parse(atob(token.split(".")[1])) : {};
+    const expiry = tokenData.exp ? tokenData.exp * 1000 : 0;
+    const now = Date.now();
+
+    if (now >= expiry) {
+      await this.#getAccessToken();
+    }
   }
 
-  return await resp.json();
+  async #request<T>(path: string, options?: RequestInit): Promise<T> {
+    await this.#ensureAccessToken();
+    const token = localStorage.getItem("accessToken");
+
+    const resp = await fetch(API_BASE + path, {
+      ...options,
+      headers: {
+        ...(options?.headers || {}),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(`API request failed: ${resp.statusText}`);
+    }
+
+    return await resp.json();
+  }
+
+  async login(username: string, password: string) {
+    await this.#getSessionToken(username, password);
+    await this.#getAccessToken();
+  }
+
+  logout() {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+  }
+
+  async createUser(username: string, password: string): Promise<User> {
+    return await this.#request<User>("/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+  }
+
+  async updateUser(username: string, password: string): Promise<User> {
+    return await this.#request<User>(`/api/users/${username}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password }),
+    });
+  }
+
+  async deleteUser(username: string): Promise<void> {
+    await this.#request<void>(`/api/users/${username}`, {
+      method: "DELETE",
+    });
+  }
+
+  async listUsers(): Promise<User[]> {
+    return await this.#request<User[]>("/api/users");
+  }
 }
 
-async function listUsers(): Promise<User[]> {
-  return await request<User[]>("/api/users");
-}
-
-async function createUser(username: string, password: string) {
-  return await request<User>("/api/users", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, password }),
-  });
-}
-
-export const API: API = {
-  createUser,
-  listUsers,
-};
+export const API = new APIClient();

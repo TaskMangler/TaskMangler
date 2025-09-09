@@ -1,9 +1,9 @@
 import { useNavigate } from "@solidjs/router";
 import { Component } from "solid-js";
+import { API } from "../../api";
 
 const LogoutPage: Component = () => {
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("accessToken");
+  API.logout();
 
   const nav = useNavigate();
 
