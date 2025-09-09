@@ -1,5 +1,10 @@
+const url = new URL(window.location.href);
+const port = url.port ? `:${url.port}` : "";
+
+const API_BASE = port === ":3000" ? "http://localhost:8080" : "";
+
 export async function getRefreshToken(username: string, password: string) {
-  const response = await fetch("/api/users/login", {
+  const response = await fetch(API_BASE + "/api/users/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -22,7 +27,7 @@ export async function getAccessToken() {
     throw new Error("No refresh token found");
   }
 
-  const response = await fetch("/api/users/@me/sessions", {
+  const response = await fetch(API_BASE + "/api/users/@me/sessions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -44,7 +49,7 @@ export type User = {
 };
 
 export async function listUsers(): Promise<User[]> {
-  const resp = await fetch("/api/users", {
+  const resp = await fetch(API_BASE + "/api/users", {
     headers: {
       Authorization: `Bearer ${await getAccessToken()}`,
     },
@@ -57,7 +62,7 @@ export async function listUsers(): Promise<User[]> {
 }
 
 export async function createUser(username: string, password: string) {
-  const resp = await fetch("/api/users", {
+  const resp = await fetch(API_BASE + "/api/users", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
